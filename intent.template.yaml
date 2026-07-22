@@ -1,0 +1,196 @@
+# ============================================================================================
+# intent.template.yaml — MANIFIESTO DE CREACIÓN del informe (solo para CREAR de cero).
+#
+# QUÉ ES: describes qué quieres en el tablero (colores, layout, filtros, medidas, etc.) para
+# CREARLO desde cero. Los agentes lo leen para no adivinar.
+#   ⇒ MODIFICAR un tablero existente NO usa este archivo: se pide por prompt ("cambia/edita…")
+#     y lo resuelve el agente `pbi-report-editor` (cambio puntual, token-light).
+#
+# CÓMO USARLO (crear):
+#   1) Copia este archivo a `intent.yaml`.
+#   2) Rellena los campos (borra los que no uses; todo es opcional salvo `pages`).
+#   3) Cada campo trae un comentario que explica QUÉ poner y un EJEMPLO.
+#
+# REGLA: este archivo es pequeño y se lee directo. El `report.json` grande NUNCA se edita a mano:
+# lo manipulan los scripts Python del toolkit.
+# ============================================================================================
+
+report: "<Nombre del informe>"          # solo identifica el tablero. Ej: "Tablero CdP"
+audience: "<Para quién es>"             # define qué insight es accionable. Ej: "Gerencia de operaciones"
+canvas: { width: 1280, height: 720 }    # tamaño de la página en píxeles. 16:9=1280x720, HD=1920x1080
+
+# RUTAS del proyecto (relativas a la carpeta donde está el .pbip). Para que los agentes
+# encuentren los archivos sin preguntarte.
+paths:
+  report: "./<Proyecto>.Report/report.json"        # el informe (un solo archivo)
+  model:  "./<Proyecto>.SemanticModel/definition"  # la carpeta del modelo (TMDL)
+
+# PREFERENCIA DE RENDER global. Por visual puedes elegir (en pages[].visuals[].render):
+#   native      = visual nativo de Power BI (chart/card/table/slicer).
+#   html-visual = custom visual "HTML Content": una MEDIDA que retorna HTML (tarjeta rica). El
+#                 toolkit lo inserta y registra el custom visual automáticamente.
+#   html-dax    = HTML embebido en una medida (pista DAX); no se inserta como visual aquí.
+# REGLA FIJA: los slicers/filtros SIEMPRE son objetos visuales nativos.
+render_preference: "native"             # native | html-visual | html-dax
+
+# ============================================================================================
+# TEMA — colores y fuentes (tableros NATIVOS y HTML).
+# COLOREADO NATIVO: si NO pones colores acá, el toolkit aplica DEFAULTS (lienzo blanco, slicers
+# gris claro, paleta por defecto). Si los pones, se usan los TUYOS — para slicers, gráficos y el
+# FONDO DEL LIENZO. La paleta de datos es opcional:
+#   palette: theme = paleta del tema PBIP (ThemeDataColor) — recomendado.
+#   palette: hex   = usar `dataColors` de abajo (hex 6 dígitos #RRGGBB).
+#   palette: none  = no forzar color (deja el del tema base).
+# (El alfa de 8 dígitos / rgba solo sirve para HTML/CSS, no para visuales nativos.)
+# ============================================================================================
+theme:
+  palette: "theme"                      # theme | hex | none
+  fontFamily: "Segoe UI"                # tipografía de los visuales
+  fontSizeBase: 10                      # tamaño base de fuente (pt)
+  dataColors: ["#RRGGBB", "#RRGGBB"]    # colores de los GRÁFICOS (si palette: hex)
+  positive: "#RRGGBB"                   # color para valores buenos (ej. verde)
+  negative: "#RRGGBB"                   # color para valores malos (ej. rojo)
+  neutral:  "#RRGGBB"                   # color neutro (ej. gris)
+  background: "#RRGGBB"                 # FONDO DEL LIENZO (página); default blanco si se omite
+  gridlines:  "#RRGGBB"                 # líneas de la grilla de los gráficos
+  slicer: { fill: "#RRGGBB", font: "#RRGGBB" }   # fondo y texto de los SLICERS (default gris claro)
+  dataLabels: true                      # true = mostrar etiquetas de dato por defecto
+
+# ============================================================================================
+# LAYOUT — distribución en una grilla de columnas (como Bootstrap).
+# La forma MÁS FÁCIL de ordenar el tablero es "dibujarlo" en `areas` (estilo CSS grid):
+#   - cada línea de `areas` es una FILA de la grilla.
+#   - cada palabra (token) es el NOMBRE de un área; repetir el nombre = ocupa más columnas.
+#   - "." = celda vacía.
+# Para VER cómo queda (área -> x/y/ancho/alto):
+#   python .claude/skills/report-json-visuals/scripts/layout_map.py --areas intent.yaml
+# ============================================================================================
+layout:
+  grid: { columns: 12, rows: 4, margin: 24, gutter: 12 }   # columnas, filas, margen y separación (px)
+  areas:
+    - "s1 s1 s1 s1 s2 s2 s2 s2 s3 s3 s3 s3"                  # fila 1: 3 slicers (4 columnas c/u)
+    - "k1 k1 k1 k1 k2 k2 k2 k2 k3 k3 k3 k3"                  # fila 2: 3 KPIs
+    - "hero hero hero hero hero hero trend trend trend trend trend trend"  # fila 3: hero + tendencia
+    - "det  det  det  det  det  det  det   det   det   det   det   det"    # fila 4: tabla/detalle
+
+# ============================================================================================
+# PREFERENCIAS DE GRÁFICO — qué tipo prefieres por forma del dato.
+# El diseñador igual te MOSTRARÁ una lista de opciones (recomendado + alternativas) por visual.
+# ============================================================================================
+chart_preferences:
+  offer_alternatives: true              # true = el diseñador siempre ofrece alternativas
+  by_shape:                             # forma del dato -> tipo de visual preferido
+    single_measure: "card"              # 1 número
+    measure_by_time: "lineChart"        # medida a lo largo del tiempo
+    measure_by_category: "clusteredBarChart"   # medida por categoría
+    part_of_whole: "donutChart"         # parte del todo
+    detail: "tableEx"                   # tabla de detalle
+
+# ============================================================================================
+# FILTROS / SLICERS — qué campos filtran y con qué tipo de control.
+# control: dropdown (desplegable) | list (lista) | between (rango) | relative_date (fecha
+#          relativa) | search (con búsqueda) | tile (mosaico)
+# ============================================================================================
+filters:
+  - { field: "Tabla.columna", control: "dropdown", title: "<Título del filtro>" }
+  # - { field: "Calendario.Fecha", control: "between", title: "Rango de fechas" }
+
+# ============================================================================================
+# PERFORMANCE — para que el tablero sea rápido, no solo bonito.
+# ============================================================================================
+performance:
+  max_visuals_per_page: 8               # tope de visuales por página (cada visual = 1 consulta)
+  default_top_n: 8                      # cuántas categorías mostrar cuando hay muchas
+  prefer_measures: true                 # usar medidas en vez de agregaciones improvisadas
+  avoid_bidirectional: true             # evitar relaciones bidireccionales innecesarias
+
+# ============================================================================================
+# MEDIDAS — el analista PROPONE ideas (no escribe DAX); apply_measures.py las guarda tras aprobar.
+# ============================================================================================
+measures:
+  allow_new: false                      # true => el analista propondrá medidas según el negocio
+  requests: []                          # opcional: [{ name: "...", purpose: "...", base: "..." }]
+
+  # TRADUCCIÓN (multiidioma): medidas-string en la subcarpeta `traduccion` de `Medidas` que
+  # devuelven el texto traducido según el idioma activo. Se usan como TÍTULOS dinámicos de
+  # gráficos/slicers (los títulos nativos no son multiidioma). Patrón canónico:
+  #   <medida> = VAR Idioma=[<active_language_measure>] RETURN CALCULATE(
+  #       MAX('<table>'[<text_column>]), REMOVEFILTERS('<table>'),
+  #       TRIM('<table>'[<id_column>]) = "<ID>", TRIM('<table>'[<lang_column>]) = Idioma )
+  i18n:
+    enabled: false                      # true = usar títulos traducidos
+    # strategy: cómo traduce el modelo (el catálogo lo detecta; el analista lo confirma):
+    #   lookup   = tabla dim_traduccion + Idioma_Activo + medidas por string (patrón abajo).
+    #   switch   = tabla de idiomas [Sigla] + medidas SWITCH(SELECTEDVALUE(...)) + Field Parameters.
+    #   metadata = 'Localized Labels' (Translations Builder; sigue el idioma del visor).
+    strategy: "lookup"                  # lookup | switch | metadata
+    # --- campos del patrón LOOKUP ---
+    table: "dim_traduccion"             # tabla con los textos traducidos
+    id_column: "id_traduccion"          # columna del identificador del texto (ej. "SLICER_1_CDP")
+    lang_column: "id_idioma"            # columna del idioma
+    text_column: "texto_traducido"      # columna con el texto ya traducido
+    active_language_measure: "Idioma_Activo"   # medida que devuelve el idioma activo
+    display_folder: "traduccion"        # subcarpeta donde viven estas medidas
+    # --- campos del patrón SWITCH (si strategy: switch) ---
+    language_table: "TL__Idiomas"       # tabla de idiomas
+    language_column: "Sigla"            # columna PT/ES/EN que elige el slicer
+    titles:                             # elemento/área de la página -> id_traduccion (lookup) o medida
+      "<área o título>": "<ID_TRADUCCION>"
+
+# ============================================================================================
+# CONVENCIONES GLOBALES — reglas que aplican a TODO el informe.
+# ============================================================================================
+global_conventions:
+  percentage_measures: []               # medidas que SIEMPRE deben verse como "67%", no "0,67"
+  percentage_decimals: 0                # decimales para los porcentajes
+  format_enforcement: "blocking"        # blocking = no insertar si no se puede forzar el formato; warn = avisar
+  slicers:
+    style: "dropdown"                   # estilo por defecto de los slicers
+    avoid_duplicate_field_caption: true # si das título propio, NO mostrar también el nombre del campo
+  bar_charts:
+    never_truncate_zero_baseline: true  # no recortar el eje para exagerar diferencias
+
+# ============================================================================================
+# PÁGINAS — una entrada por cada página del informe. Esta sección es la más importante.
+# ============================================================================================
+pages:
+  - name: "<displayName real de la sección>"   # el nombre EXACTO de la página en Power BI
+    purpose: "<qué responde esta página>"
+    primary_measures: ["Tabla.medida"]          # medidas principales
+    kpi_measures: ["Tabla.medida"]              # medidas para las tarjetas KPI
+    primary_dimensions: ["Tabla.columna"]       # dimensiones para ejes/leyendas/slicers
+    time_dimension: "Tabla.columna_tiempo"      # columna de tiempo para el eje X
+    emphasis: "ranking"                         # foco: ranking | trend | comparison | detail
+    native_first: true                          # sobreescribe render_preference para esta página
+    titles: "static-es"                         # static-es = títulos fijos en español; dynamic = i18n
+    density: "essential"                         # essential (~8 visuales) | rich (más)
+    counts: { slicers: 3, kpis: 3, charts: 2, tables: 1 }   # cantidad objetivo por familia
+
+    # (OPCIONAL) lista explícita de visuales. Si la pones, MANDA sobre `counts`.
+    # IMPORTANTE: usa nombres REALES del modelo (Tabla.columna / Tabla.medida) o el preflight
+    # `intent_check.py` los marcará como NO resueltos. Campos por visual:
+    #   area          -> token de layout.areas (define posición/tamaño)
+    #   role          -> slicer | kpi | chart | table | html | group
+    #   render        -> native | html-visual (html-visual = tarjeta HTML por medida)
+    #   measure       -> para kpi/chart/html: "Tabla.medida"
+    #   field/dimension -> "Tabla.columna"
+    #   title         -> título fijo (texto)   |   title_measure -> "Medidas.<medida_traduccion>" (i18n)
+    #   group         -> id del grupo padre (ver el item role:group)
+    visuals:
+      # Grupo contenedor (layout profesional). Los hijos lo referencian con group: g_kpis.
+      - { area: hero, role: group, id: g_kpis, title: "KPIs" }
+      - { area: s1,   role: slicer, field: "Tabla.columna", control: "dropdown", title_measure: "Medidas.slicer_x", syncGroup: "g1" }
+      - { area: k1,   role: kpi,    measure: "Tabla.medida", title: "<...>", group: g_kpis }
+      - { area: c1,   role: html,   render: "html-visual", measure: "Medidas.M_HTML_x", group: g_kpis }
+      - { area: hero, role: chart,  type: "clusteredBarChart", measure: "Tabla.medida", dimension: "Tabla.columna", title_measure: "Medidas.traduccion_titulo_x" }
+
+    # (OPCIONAL) ajustes finos por visual, tras revisar el primer render.
+    # visual_overrides:
+    #   "<título del visual>":
+    #     top_n: 8
+    #     sort: "asc"
+    #     data_labels: true
+
+    notes: >-
+      <Contexto libre: mapeos de nombres, decisiones de paleta, ajustes pedidos tras revisar
+      el primer render, etc.>

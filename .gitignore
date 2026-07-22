@@ -1,0 +1,69 @@
+# ─── Artefactos de trabajo del toolkit (se regeneran, no son fuente) ───
+catalog.json
+plan.json
+measures.json
+anatomy.json
+measure_ideas.md
+skeletons/
+
+# intent.yaml es del usuario y lleva rutas locales — solo se versiona la plantilla
+intent.yaml
+!intent.template.yaml
+
+# Documentación de proyecto interno (no se publica)
+.claude/skills/report-json-visuals/reference/PROYECTO_Tablero_CdP_HTML.md
+
+# ─── Backups que crean los scripts antes de escribir ───
+*.bak
+*.bak.*
+report.json.bak
+*.tmdl.bak
+
+# ─── Proyectos Power BI que se arrastren a esta carpeta (nunca subir datos) ───
+*.pbip
+*.pbix
+*.Report/
+*.SemanticModel/
+.pbi/
+cache.abf
+localSettings.json
+
+# ─── Python ───
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ─── Secretos y entorno ───
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+
+# ─── Claude Code local (los agentes y skills SÍ se suben) ───
+.claude/settings.local.json
+.claude/local/
+.claude/.credentials.json
+
+# ─── Editores ───
+.vscode/
+.idea/
+*.swp
+
+# ─── Sistema operativo ───
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# ─── Logs y temporales ───
+*.log
+tmp/
+temp/
+scratchpad/
